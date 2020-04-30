@@ -5,6 +5,11 @@ An Amiga game I wrote back in 1990!
 ![Menu](https://github.com/LutzGrosshennig/amiga-brain-braiser/blob/master/Images/Menu.jpg)
 ![Game](https://github.com/LutzGrosshennig/amiga-brain-braiser/blob/master/Images/Game.jpg)
 
+The game is written in 100% assembly (Profimat Amiga) but contains a nice collection of macros to make the source more readable.
+Runs fine on a stock Amiga 500 with Kickstart 1.2 and above.
+
+Original description from 1990 (sorry its still in German and needs a translation).
+
 # Funktion
 
 Brain Braiser ist ein Denk- und Strategiespiel.
