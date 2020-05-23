@@ -1,10 +1,19 @@
-# amiga-brain-braiser
-An Amiga Game I wrote back in 1990!
+# Brain Braiser
 
+An Amiga game I wrote back in 1990!
 
-BRAIN BRAISER.
+![Menu](https://github.com/LutzGrosshennig/amiga-brain-braiser/blob/master/Images/Menu.jpg)
+![Game](https://github.com/LutzGrosshennig/amiga-brain-braiser/blob/master/Images/Game.jpg)
+
+The game is written in 100% assembly (Profimat Amiga) but contains a nice collection of macros to make the source more readable.
+Runs fine on a stock Amiga 500 with Kickstart 1.2 and above.
+
+Original description from 1990 (sorry its still in German and needs a translation).
+
+# Funktion
 
 Brain Braiser ist ein Denk- und Strategiespiel.
+
 Es wird ein 12 * 13 Kästchen großes Spielfeld aufgebaut und mit Zufallszahlen
 zwischen -9 und +9, sowie zwei Arten von Sonderfeldern gefüllt. Der Spieler 1
 kann sich in diesen Spielfeld jeweils waagerecht bewegen, im Gegensatz dazu,
@@ -27,7 +36,7 @@ einen Bonus von 15 Punkten, und den nächsten Zug. Sollte ein Spieler nicht
 mehr ziehen können, da seine Reihe, Spalte komplett belegt ist, erhält sein
 Kontrahent einen Bonus von 25 Punkten, anschließend wird das Spiel beendet.
 
-Das Setup Menü.
+# Das Setup Menü.
 
 Im Setup Menü, das vor jeden Neubeginn des Spieles erscheint, können Sie
 einstellen, ob sie gegen denn Computer spielen wollen, oder einen menschlichen
@@ -39,7 +48,7 @@ wird 50 Mal in der Sekunde um eins herunter gezählt. Sie müssen also die Zeit
 in Sekunden mal 50 nehmen, um denn korrekten Wert für die Uhr zu erhalten.
 Darüber hinaus können Sie die Anzahl der vorhandenen Joysticks festlegen.
 
-Die Steuerung.
+# Die Steuerung.
 
 Spieler 1 steuert den Cursor mit den Tasten Alt links, Amiga links und der
 Leertaste, oder über einen Joystick in Port 2.
@@ -48,12 +57,12 @@ der Leertaste, oder über einen Joystick in Port 2. Sind zwei Joysticks
 vorhanden und eingestellt, so benutzt Spieler 1 den Joystick in Port 2 und
 Spieler 2 den Joystick in Port 1.
 
-Sondertasten.
+# Sondertasten.
 
 Mit der P Taste wird der Pause Modus aktiviert bzw. deaktiviert. Mit der
 ESC Taste kann das Spiel jederzeit abgebrochen werden.
 
-Der Computer.
+# Der Computer.
 
 Wollen Sie gegen den Computer spielen, so übernimmt dieser grundsätzlich die
 Rolle des 2. Spielers, daß heißt er spielt immer senkrecht. Da der Algorithmus
@@ -64,7 +73,7 @@ Punktzahlen zu bewirken.
 Desweiteren springt der Computer sein Zielfeld immer direkt an, was einen
 gewissen Überraschungseffekt für den unaufmerksamen Spieler hat.
 
-Allgemeines.
+# Allgemeines.
 
 Auf eine High-Score Liste habe ich verzichtet als ich bemerkte, daß die 
 erreichten Punktzahlen teilweise erheblich voneinander differierten. Das 
@@ -77,7 +86,7 @@ Das Spiel hat aber dafür einen gewissen Lerneffekt, wenn man es oft spielt,
 ist man später in der Lage eine ganze Reihe von Informationen (hier Werte)
 auf einmal wahrzunehmen und zu verarbeiten.
 
-Zum Programm. 
+# Zum Programm. 
 
 Das Programm ist 100%ig in Assembler (Profimat Amiga) geschrieben. Wodurch
 ein sehr kurzes und kompaktes Programm möglich war (ca. 18 kB bzw. ca. 8 kB
@@ -115,4 +124,4 @@ für größere Distanzen zusätzlich die rechte Shifttaste.), das
 erspart Ihnen das lästige umstöpseln zwischen Maus und Joystick.
 Ansonsten wünsche ich Ihnen viel Spaß mit dem Programm.
 
-Lutz Großhennig                               Schwanewede, den 29.06.1990
+Lutz Großhennig, Schwanewede, den 29.06.1990
