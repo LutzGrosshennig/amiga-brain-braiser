@@ -8,120 +8,46 @@ An Amiga game I wrote back in 1990!
 The game is written in 100% assembly (Profimat Amiga) but contains a nice collection of macros to make the source more readable.
 Runs fine on a stock Amiga 500 with Kickstart 1.2 and above.
 
-Original description from 1990 (sorry its still in German and needs a translation).
+Original description from 1990 (translated to English below).
 
-# Funktion
+# Function
 
-Brain Braiser ist ein Denk- und Strategiespiel.
+Brain Braiser is a thinking and strategy game.
 
-Es wird ein 12 * 13 Kästchen großes Spielfeld aufgebaut und mit Zufallszahlen
-zwischen -9 und +9, sowie zwei Arten von Sonderfeldern gefüllt. Der Spieler 1
-kann sich in diesen Spielfeld jeweils waagerecht bewegen, im Gegensatz dazu,
-bewegt sich der Spieler 2 immer nur senkrecht.
-Sinn des Spiels ist es eine möglichst hohe Punktzahl zu erreichen.
-Die einfachste Möglichkeit dies zu erreichen ist, jeweils die höchste Wertung
-der aktuellen Reihe bzw. Spalte zu besetzen, allerdings wird man dann das Spiel
-sehr schnell verlieren, da Ihr Gegenspieler dann mehr als 5 Züge im voraus
-planen kann, wo er Sie hinlocken will. Eine laufende Uhr begrenzt die Zugzeit,
-so das bei kleiner Zeiteinstellung sehr schnell gehandelt werden muss.
-Zusätzliche Felder können strategisch eingesetzt werden. Das wären zum einen die
-Xchange Felder (durch ein großes X gekennzeichnet), die ein vertauschen der
-Punktzahlen von Spieler 1 und Spieler 2 bewirken, so das ein Spieler der mit der
-Punktezahl im Rückstand ist, seinem Rivalen seine schwer verdienten Punkte
-"wegmoppsen" kann.
-Zum anderen gibt es noch Zero Felder (Feldinhalt ist eine 0), diese bewirken,
-daß die Vorzeichen im ganzen Spielfeld vertauscht werden (-9 wird 9 etc.).
-Sollte die Uhr für einen Spieler abgelaufen sein, erhält der andere Spieler
-einen Bonus von 15 Punkten, und den nächsten Zug. Sollte ein Spieler nicht
-mehr ziehen können, da seine Reihe, Spalte komplett belegt ist, erhält sein
-Kontrahent einen Bonus von 25 Punkten, anschließend wird das Spiel beendet.
+A 12 × 13 tile playing field is generated and filled with random numbers between -9 and +9, plus two kinds of special squares. Player 1 can move horizontally on the field, whereas Player 2 can only move vertically. The aim of the game is to achieve the highest possible score. The simplest way to do this is to always occupy the highest-value tile in the current row or column, but if you do that you will lose very quickly, because your opponent can then plan more than five moves ahead and lure you into a trap. A running clock limits turn time, so with short time settings you must act very quickly.
 
-# Das Setup Menü.
+Additional special squares can be used strategically. One type are the Xchange squares (marked with a large X), which swap the point totals of Player 1 and Player 2 — allowing a player who is behind to "steal" their opponent’s hard-earned points. The other type are Zero squares (square value is 0); these invert the signs of all numbers on the board (a -9 becomes 9, etc.). If a player's clock runs out, the other player receives a 15-point bonus and gets the next move. If a player can no longer move because their row or column is completely filled, their opponent receives a 25-point bonus and the game ends.
 
-Im Setup Menü, das vor jeden Neubeginn des Spieles erscheint, können Sie
-einstellen, ob sie gegen denn Computer spielen wollen, oder einen menschlichen
-Gegner vorziehen. Desweiteren können Sie die Art der Steuerung für jeden Spieler
-separat festlegen. In einem String-Gadget können Sie außerdem komfortabel
-die maximale Zugdauer einstellen (Voreingestellt 400 / entspricht 8 sek.).
-Wollen Sie die Uhr selbst stellen, dann beachten Sie bitte folgendes, die Uhr
-wird 50 Mal in der Sekunde um eins herunter gezählt. Sie müssen also die Zeit
-in Sekunden mal 50 nehmen, um denn korrekten Wert für die Uhr zu erhalten.
-Darüber hinaus können Sie die Anzahl der vorhandenen Joysticks festlegen.
+# The Setup Menu
 
-# Die Steuerung.
+In the setup menu, which appears before each new game, you can choose whether to play against the computer or prefer a human opponent. You can also set the control type separately for each player. In a string gadget you can conveniently set the maximum move duration (default 400 / corresponds to 8 seconds). If you want to set the clock yourself, please note: the clock is decremented 50 times per second. So you must multiply the number of seconds by 50 to get the correct value for the clock. In addition, you can set the number of joysticks available.
 
-Spieler 1 steuert den Cursor mit den Tasten Alt links, Amiga links und der
-Leertaste, oder über einen Joystick in Port 2.
-Spieler 2 steuert den Cursor mit den Pfeiltasten hoch und runter, sowie mit
-der Leertaste, oder über einen Joystick in Port 2. Sind zwei Joysticks
-vorhanden und eingestellt, so benutzt Spieler 1 den Joystick in Port 2 und
-Spieler 2 den Joystick in Port 1.
+# Controls
 
-# Sondertasten.
+Player 1 controls the cursor with the left Alt key, left Amiga key and the spacebar, or via a joystick in Port 2. Player 2 controls the cursor with the up and down arrow keys and the spacebar, or via a joystick in Port 2. If two joysticks are present and configured, Player 1 uses the joystick in Port 2 and Player 2 uses the joystick in Port 1.
 
-Mit der P Taste wird der Pause Modus aktiviert bzw. deaktiviert. Mit der
-ESC Taste kann das Spiel jederzeit abgebrochen werden.
+# Special Keys
 
-# Der Computer.
+Pressing P toggles pause mode on or off. Pressing ESC terminates the game at any time.
 
-Wollen Sie gegen den Computer spielen, so übernimmt dieser grundsätzlich die
-Rolle des 2. Spielers, daß heißt er spielt immer senkrecht. Da der Algorithmus
-des Computergegners nicht sehr umfangreich ist (damit Sie weniger Abtippen
-müssen), hat er eine entscheidene Vergünstigung erhalten, daß X-Feld zählt für
-ihn 10 Punkte, anstatt wie bei einem menschlichen Spieler, ein vertauschen der
-Punktzahlen zu bewirken.
-Desweiteren springt der Computer sein Zielfeld immer direkt an, was einen
-gewissen Überraschungseffekt für den unaufmerksamen Spieler hat.
+# The Computer
 
-# Allgemeines.
+If you choose to play against the computer, it always takes the role of Player 2, i.e., it always plays vertically. Because the computer opponent’s algorithm is not very sophisticated (so you have less typing to do), it has a compensating advantage: for the computer an X-field counts as 10 points instead of swapping the players’ scores as it would for a human player. In addition, the computer always jumps directly to its target tile, which can be a surprising effect for an inattentive player.
 
-Auf eine High-Score Liste habe ich verzichtet als ich bemerkte, daß die 
-erreichten Punktzahlen teilweise erheblich voneinander differierten. Das 
-kommt dadurch zustande, daß das Spielfeld mit Zufallszahlen gefüllt wird,
-es kann also durchaus vorkommen, daß keine einzige 9, ob plus oder minus,
-im Spiel vorkommt, also keine große Chance auf eine hohe Punktzahl vorhanden
-ist. Dadurch ist die erreichte Punktzahl mehr vom Zufall als vom Können des
-jeweiligen Spielers abhängig.
-Das Spiel hat aber dafür einen gewissen Lerneffekt, wenn man es oft spielt,
-ist man später in der Lage eine ganze Reihe von Informationen (hier Werte)
-auf einmal wahrzunehmen und zu verarbeiten.
+# General
 
-# Zum Programm. 
+I omitted a high-score list when I noticed that achieved scores varied greatly. This is due to the playing field being filled with random numbers; it can easily happen that not a single 9, positive or negative, appears in a game, so there’s no good chance to get a high score. Thus the achieved score depends more on luck than on the player’s skill. The game does, however, have a learning effect: if you play it often, you become able to perceive and process a whole row of information (values) at once.
 
-Das Programm ist 100%ig in Assembler (Profimat Amiga) geschrieben. Wodurch
-ein sehr kurzes und kompaktes Programm möglich war (ca. 18 kB bzw. ca. 8 kB
-gepackt). Das Programm ist auch in zwei sogenannte Hunks aufgeteilt die
-beim Laden des Programms automatisch den Programmcode in mögliches
-FAST-RAM, und die Grafik- und Sound-Daten ins CHIP-RAM laden.
-Während des Spiels ist das Multitasking ausgeschaltet. Befinden Sie sich
-allerdings im Setup oder Game-Over Modus ist das Multitasking wieder aktiv.
-Auch wird nach dem Verlassen des Programms alles sorgfältig aufgeräumt, so das
-Sie das Spiel mal nebenbei laden können, ohne befürchten zu müssen, daß Sie
-nach dem verlassen des Programms Besuch von einen Herren aus Indien bekommen
-(GURU !!!).
-Da mit einer Ausnahme ausschließlich Betriebssytemroutinen (reichen für diese
-Art von Spiel vollkommen aus), verwendet wurden, dürfte es keine 
-Kompatibilitäts Schwierigkeiten mit neueren KICKSTARTs (1.3/2.0) oder
-eventuellen Turbokarten geben. Die oben erwähnte Ausnahme besteht in der 
-Initialisierung des Vertikal Blanking Interrupts (Tritt immer auf wenn der
-Bildschirm neu auf dem Monitor gezeichnet wird. 50 mal / Sekunde bei PAL
-Amigas ), die ich "zu Fuß" programmiert habe, da die Routine aber erst 
-aufgerufen wird, nachdem das Multitasking ausgeschaltet ist, sollte es auch hier
-keine Probleme geben. (Die alte Interrupt Adresse wird abgesichert und nach
-verlassen des Programms wieder installiert).  
-Sollten Sie vorhaben den Quellcode mit Ihren Assembler zu übersetzen, müssen 
-sie folgendes beachten : Der Befehl ALIGN ist ein Äquivalent zum Befehl EVEN
-der von dem meisten Assemblern benutzt wird. Ansonsten müssen Sie im Ihren
-Handbuch nachschlagen, der Befehl bewirkt das der nachfolgende Quellcode
-auf eine gerade Adresse gesetzt wird. Es ist desweiteren der Befehl IBYTES
-verwendet wurden, der eine Spezialität des Profimats darstellt, mit ihm kann
-man Daten direkt in den Quellcode integrieren. Da ich mich mit anderen
-Assemblern nicht auskenne, weiß ich auch keine Lösung für dieses Problem,
-aber vielleicht hat ja einer der Leser eine Idee.
-Zum Schluß noch ein Tip, wenn Sie zwei Joysticks verwenden, können Sie den 
-Mauspointer auch über die Tastatur steuern (rechte Amigataste + Pfeiltasten,
-für größere Distanzen zusätzlich die rechte Shifttaste.), das
-erspart Ihnen das lästige umstöpseln zwischen Maus und Joystick.
-Ansonsten wünsche ich Ihnen viel Spaß mit dem Programm.
+# About the Program
 
-Lutz Großhennig, Schwanewede, den 29.06.1990
+The program is written 100% in assembler (Profimat Amiga), which allowed a very short and compact program (approx. 18 kB or about 8 kB packed). The program is also split into two so-called hunks that, when the program is loaded, automatically place the program code into possible FAST RAM and the graphics and sound data into CHIP RAM. Multitasking is switched off during gameplay. However, when you are in the setup or game-over mode, multitasking is active again. Also, everything is carefully cleaned up when exiting the program, so you can load the game alongside other things without having to worry about getting a visit from a gentleman from India (GURU!!!).
+
+Except for one exception, only operating system routines are used (which are more than sufficient for this type of game), so there should be no compatibility problems with newer Kickstarts (1.3/2.0) or possible turbo cards. The exception is the initialization of the vertical blank interrupt (which occurs every time the screen is redrawn — 50 times per second on PAL Amigas), which I programmed "by hand"; however, since that routine is only called after multitasking has been disabled, this should not cause problems either. (The old interrupt address is saved and reinstalled when the program exits.)
+
+If you intend to assemble the source with your assembler, please note: the ALIGN instruction is equivalent to the EVEN instruction used by most assemblers. Otherwise consult your assembler’s manual; the instruction causes the following source code to be placed at an even address. Also, the IBYTES instruction is used, which is a specialty of Profimat and lets you embed data directly in the source. I don’t know a solution for other assemblers because I’m not familiar with them, but maybe one of the readers has an idea.
+
+One final tip: if you use two joysticks, you can also control the mouse pointer via the keyboard (right Amiga key + arrow keys; for larger distances also hold the right Shift key), which saves you the bother of unplugging and replugging between mouse and joystick.
+
+Have fun with the program.
+
+Lutz Großhennig, Schwanewede, 29.06.1990
