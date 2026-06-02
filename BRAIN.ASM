@@ -80,8 +80,12 @@ KEY_RIGHT      = $BB
 
 ; GAME
 
-BOARD_W			= 13
-BOARD_H			= 12
+BOARD_W   = 13
+BOARD_H   = 12
+
+; INPUT
+
+INPUT_SKIP = 5
 
 ;---------  MACROS  -----------------------------------------
 
@@ -295,7 +299,7 @@ START:
        OPENLIB INTNAME,INTBASE
        TST.L   D0
        BEQ     END2
-	   
+    
        OPENLIB GFXNAME,GFXBASE
        TST.L   D0
        BEQ     END1
@@ -303,7 +307,7 @@ START:
        OPENSCR    SCREENDEVS,SCREENHD
        TST.L   D0
        BEQ     END3
-	   
+    
        SCREEN_COL SCREEN_COLORS,8
 
 SET_UP:
@@ -324,7 +328,7 @@ SET_UP:
        TST.L   D0
        BEQ     END4
         
-	   DO_3D_BOX 0,0,399,199,5
+    DO_3D_BOX 0,0,399,199,5
        DO_3D_BOX 50,20,150,100,5
        DO_3D_BOX 250,20,350,100,5
 
@@ -355,7 +359,7 @@ SET_UP:
        SHADOW_WRITE JOYTEXT,9,164,115,1
        SHADOW_WRITE JOY1TEXT,1,198,132,1
 
-	   MOVE.L  INTBASE,A6
+    MOVE.L  INTBASE,A6
        MOVE.L  WINDOWHD,A1
        LEA     GADGET_3,A0
        MOVE.L  #0,A2
@@ -405,7 +409,7 @@ END1:  CLOSELIB INTBASE
 END2:
        MULTITASKING   
        EXIT_AMIGA
-	   
+    
 ;----------------------------------------------------------
 
 TEST_SPE_KEYS:
@@ -1459,7 +1463,7 @@ NEW_IRQ:
        BEQ     CHANGE_PLAYER           ; JA PLAYER WECHSELT
 
 IRQ_1:
-       CMP.W   #4,ZAEHLER              ; ZAEHLER = 4
+       CMP.W   #INPUT_SKIP,ZAEHLER     ; ONLY CHECK EVERY OTHER VBL
        BNE     IRQ4                    ; NEIN ZUM ENDE
 
        BTST    #0,PLAYER               ; PLAYER 1 ?
@@ -1635,7 +1639,7 @@ BRAIN_IM:
        DC.L    0
 
 SPIELFELD:
-       DS.B    BOARD_H * BOARD_W,0,0,0,0
+       DS.B    BOARD_W * BOARD_H,0
 
 ; -------------------      TEXTE        -------------------------
  ALIGN
