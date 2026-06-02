@@ -2,7 +2,7 @@
 ;*                                             *
 ;*        BRAIN BRAISER  ( DENK SPIEL )        *
 ;*                                             *
-;*          AUTOR : Lutz GroÃŸhennig            *
+;*          AUTOR : Lutz Großhennig            *
 ;*                                             *
 ;*     100% ASSEMBLER ( PROFIMAT AMIGA )       *
 ;*                                             *
@@ -35,6 +35,7 @@ CLOSESCREEN    = -066
 OPENWINDOW     = -204
 CLOSEWINDOW    = -072
 DRAWIMAGE      = -114
+REFRESHGADGETS = -222
 
 ; OFFSETS GRAPHICS
 
@@ -57,6 +58,7 @@ MOUSEBUTTON    = $BFE001
 VHPOSR         = $DFF006
 INTENA         = $DFF09A
 KEYBOARD       = $BFEC01
+CIAA_CRA       = $BFEE01
 REQUEST        = $10001
 
 CTLW           = $DFF096
@@ -65,6 +67,21 @@ C0TLO          = $DFF0A2
 C0TL           = $DFF0A4
 C0PER          = $DFF0A6
 C0VOL          = $DFF0A8
+
+; KEYBOARD
+
+KEY_ESC        = $75
+KEY_PAUSE      = $CD
+KEY_SPACE      = $7F
+KEY_UP         = $67
+KEY_DOWN       = $65
+KEY_LEFT       = $BF
+KEY_RIGHT      = $BB
+
+; GAME
+
+BOARD_W			= 13
+BOARD_H			= 12
 
 ;---------  MACROS  -----------------------------------------
 
@@ -278,6 +295,7 @@ START:
        OPENLIB INTNAME,INTBASE
        TST.L   D0
        BEQ     END2
+	   
        OPENLIB GFXNAME,GFXBASE
        TST.L   D0
        BEQ     END1
@@ -285,9 +303,11 @@ START:
        OPENSCR    SCREENDEVS,SCREENHD
        TST.L   D0
        BEQ     END3
+	   
        SCREEN_COL SCREEN_COLORS,8
 
 SET_UP:
+
        MOVE.L  #0,SCORE
        MOVE.L  #0,SCORE2
        MOVE.L  #SPIELFELD,MAPPOINTER
@@ -299,12 +319,12 @@ SET_UP:
        MOVE.W  #40,YPOS
        MOVE.W  #0,BLOCK_X
 
-
        MOVE.L  RASTPORT,DUMMYRASTPORT
        OPENWIND WINDOWDEVS,WINDOWHD
        TST.L   D0
        BEQ     END4
-       DO_3D_BOX 0,0,399,199,5
+        
+	   DO_3D_BOX 0,0,399,199,5
        DO_3D_BOX 50,20,150,100,5
        DO_3D_BOX 250,20,350,100,5
 
@@ -334,6 +354,12 @@ SET_UP:
 
        SHADOW_WRITE JOYTEXT,9,164,115,1
        SHADOW_WRITE JOY1TEXT,1,198,132,1
+
+	   MOVE.L  INTBASE,A6
+       MOVE.L  WINDOWHD,A1
+       LEA     GADGET_3,A0
+       MOVE.L  #0,A2
+       JSR     REFRESHGADGETS(A6)
 
        LEA     GADGET_DONE,A4
        BRA     WAIT_LOOP
@@ -367,32 +393,28 @@ MAINLOOP:
 
        BTST    #2,PLAYER
        BNE     GAME_OVER
-
        BRA     MAINLOOP
 
 ENDE:
-
        BSR     EXIT_IRQ
 ENDE_2:
        BSR     FREE_POINTER
-
 END4:  CLOSESCR  SCREENHD
-
 END3:  CLOSELIB GFXBASE
 END1:  CLOSELIB INTBASE
 END2:
-       MULTITASKING
-     
+       MULTITASKING   
        EXIT_AMIGA
+	   
 ;----------------------------------------------------------
 
 TEST_SPE_KEYS:
 
-       MOVE.B  KEYBOARD,D0
-       CMP.B   #$75,D0
-       BEQ     ESCAPE_GAME
-       CMP.B   #$CD,D0
-       BEQ     SET_PAUSE_MODE
+       BSR     READ_KEYBOARD
+       CMP.B   #KEY_ESC,D0
+       BEQ.S   ESCAPE_GAME
+       CMP.B   #KEY_PAUSE,D0
+       BEQ.S   SET_PAUSE_MODE
        RTS
 
 ESCAPE_GAME:
@@ -402,19 +424,48 @@ ESCAPE_GAME:
 SET_PAUSE_MODE:
        BCHG    #3,PLAYER
 SET_PAUSE:
-       CMP.B   #$CC,KEYBOARD
-       BNE     SET_PAUSE
+       BSR     READ_KEYBOARD
+       CMP.B   #KEY_PAUSE-1,D0 ; Pause released?
+       BNE.S   SET_PAUSE
+       RTS
+    
+;----------------------------------------------------------
+    
+READ_KEYBOARD:
+
+       MOVE.B  KEYBOARD,D0          ; read raw byte from keyboard
+
+       BSET    #6,CIAA_CRA          ; handshake
+
+       BSR     WAIT_TWORASTERLINES  ; busy loop for two rasterlines
+
+       BCLR    #6,CIAA_CRA          ; ack
+       RTS    
+
+WAIT_TWORASTERLINES:
+       MOVE.B  VHPOSR+1,D1          ; read vertical position high byte
+\loop1:
+       CMP.B   VHPOSR+1,D1
+       BEQ.S   \loop1               ; wait for raster to move to next line
+
+       MOVE.B  VHPOSR+1,D1
+\loop2:
+       CMP.B   VHPOSR+1,D1
+       BEQ.S   \loop2               ; second line about 128 micro seconds
        RTS
 
 ;----------------------------------------------------------
+
 MOVE_PEN_TO:
        MOVE.L  GFXBASE,A6
        MOVE.L  RASTPORT,A1
        JMP     MOVETO(A6)
+
 SET_A_PEN:
        MOVE.L  GFXBASE,A6
        MOVE.L  RASTPORT,A1
        JMP     SETAPEN(A6)
+
 SET_B_PEN:
        MOVE.L  GFXBASE,A6
        MOVE.L  RASTPORT,A1
@@ -426,11 +477,11 @@ GADGET_DONE:
 
        MOVE.W  $26(A1),D0
        CMP.W   #1,D0
-       BEQ     HUMAN_HUMAN
+       BEQ.S   HUMAN_HUMAN
        CMP.W   #2,D0
-       BEQ     HUMAN_AMIGA
+       BEQ.S   HUMAN_AMIGA
        CMP.W   #4,D0
-       BEQ     P1_CHANGE_INPUT
+       BEQ.S   P1_CHANGE_INPUT
        CMP.W   #5,D0
        BEQ     P2_CHANGE_INPUT
        CMP.W   #6,D0
@@ -456,6 +507,7 @@ P1_CHANGE_INPUT:
        BSR     CLEAR_FIELD
        SHADOW_WRITE JOYTEXT,8,68,132,2
        BRA     WAIT_LOOP
+
 P1_JOY:
        BCLR    #4,PLAYER
        BSR     CLEAR_FIELD
@@ -476,7 +528,6 @@ P2_JOY:
        BSR     CLEAR_FIELD2
        SHADOW_WRITE KEYTEXT,8,268,132,3
        BRA     WAIT_LOOP
-
 
 CLEAR_FIELD:
        BOX     52,122,148,133,5
@@ -508,6 +559,7 @@ JOY2:
 GAME_OVER:
 
        BSR     EXIT_IRQ
+
        MULTITASKING
 
        MOVE.L  RASTPORT,DUMMYRASTPORT
@@ -539,9 +591,9 @@ GADGET_ACTIVE:
 
        MOVE.W  $26(A1),D0
        CMP.W   #1,D0
-       BEQ     NOCHMAL
+       BEQ.S   NOCHMAL
        CMP.W   #2,D0
-       BEQ     END_THE_GAME
+       BEQ.S   END_THE_GAME
        BRA     WAIT_LOOP
 
 ;----------------------------------------------------------
@@ -557,7 +609,7 @@ END_THE_GAME:
 
        CLOSEWIND WINDOWHD
        MONOTASKING
-       BRA       ENDE_2
+       BRA     ENDE_2
 
 WINNER:
 
@@ -621,7 +673,7 @@ WAIT_LOOP:
        MOVE.L  A5,A0
        JSR     GETMSG(A6)
        TST.L   D0
-       BEQ     WAIT_LOOP
+       BEQ.S   WAIT_LOOP
 
        MOVE.L  D0,A0
        MOVE.L  $14(A0),D4
@@ -629,13 +681,14 @@ WAIT_LOOP:
        MOVE.L  $1C(A0),A1
 
        CMP.L   #$20,D4
-       BEQ     GADGET_OK
+       BEQ.S   GADGET_OK
        CMP.L   #$40,D4
-       BEQ     GADGET_OK
+       BEQ.S   GADGET_OK
 
-       BRA     WAIT_LOOP
+       BRA.S   WAIT_LOOP
 
 GADGET_OK:
+
        JMP     (A4)
 ;----------------------------------------------------------
 
@@ -659,7 +712,7 @@ BUILD_UP_SCREEN:
        SHADOW_WRITE TEXT1,13,509,170,1
        SHADOW_WRITE TEXT2,17,495,185,1
        SHADOW_WRITE TEXT3,17,495,230,1
-       SHADOW_WRITE TEXT4,15,505,245,1
+       SHADOW_WRITE TEXT4,16,495,245,1
        RTS
 
 ;----------------------------------------------------------
@@ -748,9 +801,9 @@ SPRITE_COLOR:
 BUILD_UP:
        LEA     SPIELFELD,A5
        MOVE.L  INTBASE,A6
-       MOVEQ   #11,D6
+       MOVEQ   #BOARD_H-1,D6
 BUILD_1:
-       MOVEQ   #12,D7
+       MOVEQ   #BOARD_W-1,D7
        MOVE.W  #2,XPOS
 
 BUILD_LOOP:
@@ -947,12 +1000,13 @@ TEST2:
        BTST    #5,PLAYER
        BNE     JOYSTICK_UD
 
-       MOVE.B  KEYBOARD,D0             
-       CMP.B   #$67,D0                 ; CURSOR UP
+       ;MOVE.B  KEYBOARD,D0
+       BSR     READ_KEYBOARD
+       CMP.B   #KEY_UP,D0              ; CURSOR UP
        BEQ     SP_UP
-       CMP.B   #$65,D0                 ; CURSOR DOWN
+       CMP.B   #KEY_DOWN,D0            ; CURSOR DOWN
        BEQ     SP_DOWN
-       CMP.B   #$7F,D0                 ; SPACEBAR
+       CMP.B   #KEY_SPACE,D0           ; SPACEBAR
        BEQ     SPACE
        BRA     IRQ4
 
@@ -963,12 +1017,13 @@ TEST1:
        BTST    #4,PLAYER
        BNE     JOYSTICK_LR
 
-       MOVE.B  KEYBOARD,D0
-       CMP.B   #$37,D0                 ; ALT LEFT
+       ;MOVE.B  KEYBOARD,D0
+       BSR     READ_KEYBOARD
+       CMP.B   #KEY_LEFT,D0            ; A Key -> LEFT
        BEQ     SP_LEFT
-       CMP.B   #$33,D0                 ; AMIGA LEFT
+       CMP.B   #KEY_RIGHT,D0           ; D Key -> RIGHT
        BEQ     SP_RIGHT
-       CMP.B   #$7F,D0                 ; SPACEBAR
+       CMP.B   #KEY_SPACE,D0           ; SPACEBAR
        BEQ     SPACE1
        BRA     IRQ4
 
@@ -976,7 +1031,7 @@ SP_UP:
        CMP.W   #40,SP_Y                ; INNERHALB DES FELDES ?
        BEQ     RAUS                    ; NEIN RAUS
        SUB.W   #17,SP_Y
-       SUB.L   #13,MAPPOINTER
+       SUB.L   #BOARD_W,MAPPOINTER
        SUBQ.B  #1,BLOCK_Y
        MOVE.W  #600,D0
        BSR     SOUND
@@ -986,7 +1041,7 @@ SP_DOWN:
        CMP.W   #227,SP_Y               ; INNERHALB DES FELDES ?
        BEQ     RAUS                    ; NEIN RAUS
        ADD.W   #17,SP_Y
-       ADD.L   #13,MAPPOINTER
+       ADD.L   #BOARD_W,MAPPOINTER
        ADDQ.B  #1,BLOCK_Y
        MOVE.W  #600,D0
        BSR     SOUND
@@ -1077,20 +1132,20 @@ BESETZT1:
 RAUS:    
        MOVE.W  #900,D0                 ; FREQUENZ SETZEN
        BSR     SOUND                   ; TASTATUR KLICK
-       BRA     IRQ4                    ; ZURÃœCK
+       BRA     IRQ4                    ; ZURüCK
 
 SET_ZERO1:
        MOVE.L  #0,SCORE                ; SCORE NULL SETZEN
-       BRA     RETURN1                 ; ZURÃœCK
+       BRA     RETURN1                 ; ZURüCK
 
 ;----------------------------------------------------------
 
 GET_XTENS:
        BSR     GET_XTENSION            ; WECHSELN
-       BRA     DO_SPACE_BAR            ; ZURÃœCK
+       BRA     DO_SPACE_BAR            ; ZURüCK
 GET_XTENS1:
        BSR     GET_XTENSION            ; WECHSELN
-       BRA     DO_SPACE2               ; ZURÃœCK
+       BRA     DO_SPACE2               ; ZURüCK
 
 GET_XTENSION:
 
@@ -1100,16 +1155,16 @@ GET_XTENSION:
        MOVE.L  D0,SCORE2               ; /
        BSR     WRITE_SCORE             ; \ SCORES AUSGEBEN
        BSR     WRITE_SCORE_2           ; /
-       RTS                             ; ZURÃœCK
+       RTS                             ; ZURüCK
 
 ;----------------------------------------------------------
 
 ZERO1:
        BSR     ZEROPLAY                ; VORZ. WECHSELN
-       BRA     DO_SPACE_BAR            ; ZURÃœCK
+       BRA     DO_SPACE_BAR            ; ZURüCK
 ZERO2:
        BSR     ZEROPLAY                ; VORZ. WECHSELN
-       BRA     DO_SPACE2               ; ZURÃœCK
+       BRA     DO_SPACE2               ; ZURüCK
 
 ZEROPLAY:
        MOVE.B  #20,(A0)                ; FELD ALS BESETZT MAKIEREN
@@ -1120,7 +1175,7 @@ ZEROPLAY:
 ;-----------------------------------------------------------
 
 DO_BLOCK:
-       MOVE.L  GFXBASE,A6              ; FÃœLLT DAS AKTUELLE
+       MOVE.L  GFXBASE,A6              ; FäLLT DAS AKTUELLE
        MOVE.L  RASTPORT,A1             ; FELD IN DER FARBE
        MOVEQ   #0,D0                   ; DES SPIELERS AUS
        MOVEQ   #0,D1
@@ -1190,55 +1245,55 @@ TIME_EINTRAGEN:
 
 ;----------------------------------------------------------
 
-TEST_ROW:                              ; ZUG NOCH MÃ–GLICH ?
-                                       ; FÃœR PLAYER 1
-       MOVEQ   #0,D0                   ; D0 LÃ–SCHEN
+TEST_ROW:                              ; ZUG NOCH MÖGLICH ?
+                                       ; FÜR PLAYER 1
+       MOVEQ   #0,D0                   ; D0 LÖSCHEN
        LEA     SPIELFELD,A0            ; SPIELFELD BEGINN
        MOVE.B  BLOCK_Y,D0              ; \
-       MULU    #13,D0                  ;  } REIHE BERECHNEN
+       MULU    #BOARD_W,D0             ;  } REIHE BERECHNEN
        ADD.L   D0,A0                   ; /
-       MOVEQ   #12,D7                  ; 13 DURCHLÃ„UFE
+       MOVEQ   #BOARD_W-1,D7           ; 13 DURCHLÄUFE
 
 ROW_LOOP:
 
        MOVE.B  (A0)+,D0                ; WERT DES FELDES HOLEN
        CMP.B   #20,D0                  ; IST DAS FELD BESETZT ?
-       BNE     ZUG_MÃ–GLICH2            ; NEIN, DANN IST EIN ZUG MÃ–GLICH
+       BNE     ZUG_MOEGLICH2           ; NEIN, DANN IST EIN ZUG MÖGLICH
 
        DBRA    D7,ROW_LOOP             ; SONST WIEDERHOLEN
 
-       ADD.L   #25,SCORE2              ; ALLES BESETZT P2 ERHÃ„LT BONUS
+       ADD.L   #25,SCORE2              ; ALLES BESETZT P2 ERHÄLT BONUS
        BSR     WRITE_SCORE_2           ; NEUEN SCORE AUSGEBEN
        BSET    #2,PLAYER               ; GAME OVER
-       BRA     IRQ4                    ; ZURÃœCK
+       BRA     IRQ4                    ; ZURUECK
 
 ;----------------------------------------------------------
 
-TEST_COLOUM:                           ; ZUG NOCH MÃ–GLICH ?
-                                       ; FÃœR PLAYER 2
-       MOVEQ   #0,D0                   ; D0 LÃ–SCHEN
+TEST_COLOUM:                           ; ZUG NOCH MÖGLICH ?
+                                       ; FÜR PLAYER 2
+       MOVEQ   #0,D0                   ; D0 LÖSCHEN
        MOVE.B  BLOCK_X,D0              ; \
        LEA     SPIELFELD,A0            ;  } SPALTE BERECHNEN
        ADD.L   D0,A0                   ; /
-       MOVEQ   #10,D7                  ; 11 DURCHLÃ„UFE
+       MOVEQ   #10,D7                  ; 11 DURCHLÄUFE
 
 COLOUM_LOOP:
 
        MOVE.B  (A0),D0                 ; FELD EINLESEN
-       CMP.B   #20,D0                  ; FELD BESETZT ?
-       BNE     ZUG_MÃ–GLICH             ; NEIN ZUG MÃ–GLICH
-       ADD.L   #13,A0                  ; SONST NÃ„CHSTES FELD
-       DBRA    D7,COLOUM_LOOP          ; ÃœBERPRÃœFEN
+       CMP.B   #20,D0                  ; FELD BESETZT?
+       BNE     ZUG_MOEGLICH            ; NEIN ZUG MOEGLICH
+       ADD.L   #BOARD_W,A0             ; SONST NÄCHSTES FELD
+       DBRA    D7,COLOUM_LOOP          ; ÜBERPRÜFEN
 
-       ADD.L   #25,SCORE               ; ALLES BESETZT P1 ERHÃ„LT BONUS
+       ADD.L   #25,SCORE               ; ALLES BESETZT P1 ERHÄLT BONUS
        BSR     WRITE_SCORE             ; NEUEN SCORE AUSGEBEN
        BSET    #2,PLAYER               ; GAME OVER
-       BRA     IRQ4                    ; ZURÃœCK
+       BRA     IRQ4                    ; ZURÜCK
 
-ZUG_MÃ–GLICH:
-       BRA     TEST2                   ; ZURÃœCK
-ZUG_MÃ–GLICH2:
-       BRA     TEST1                   ; ZURÃœCK
+ZUG_MOEGLICH:
+       BRA     TEST2                   ; ZURÜCK
+ZUG_MOEGLICH2:
+       BRA     TEST1                   ; ZURÜCK
 
 ;----------------------------------------------------------
 
@@ -1253,20 +1308,20 @@ COMPUTER:
        MOVE.B  BLOCK_X,D0              ; \
        LEA     SPIELFELD,A0            ;  } SPALTE BERECHNEN
        ADD.L   D0,A0                   ; /
-       MOVEQ   #11,D7                  ; 12 REIHEN
-       MOVE.L  #0,A2                   ; A2 LÃ–SCHEN
+       MOVEQ   #BOARD_H-1,D7           ; 12 REIHEN
+       MOVE.L  #0,A2                   ; A2 LÖSCHEN
 
 COMPUTER_LOOP:
 
        MOVE.B  (A0),D0                 ; FELD WERT HOLEN
-       CMP.B   #20,D0                  ; FELD BESETZT ?
+       CMP.B   #20,D0                  ; FELD BESETZT?
        BNE     FELD_FREI               ; NEIN UNTERSUCHEN
 NEXT:
-       ADD.L   #13,A0                  ; NAECHSTE REIHE
+       ADD.L   #BOARD_W,A0             ; NAECHSTE REIHE
        ADDQ.W  #1,D2                   ; BLOCK_Y +1
        DBRA    D7,COMPUTER_LOOP        ; WIEDERHOLEN
 
-       CMP.L   #0,A2                   ; ALLE FELDER BESETZT ?
+       CMP.L   #0,A2                   ; ALLE FELDER BESETZT?
        BEQ     NO_MORE_STUFF           ; JA GAME OVER
 
        MOVE.B  D3,BLOCK_Y              ; BLOCK_Y SICHERN
@@ -1287,28 +1342,28 @@ RETURNC:
        BSR     WRITE_SCORE_2           ; SCORE2 AUSGEBEN
 RETURNC1:
        PEN_COLOR 3                     ; FELD IN PLAYER FARBE
-       BSR     DO_BLOCK                ; AUSFÃœLLEN
+       BSR     DO_BLOCK                ; AUSFÜLLEN
        BCLR    #0,PLAYER               ; PLAYER WECHSELT
        MOVE.W  TIMEBASE,TIME           ; UHR STELLEN
        MOVE.W  #900,D0                 ; FREQUENZ SETZEN
        BSR     SOUND                   ; TASTATUR KLICK
 
-       BRA     IRQ4                    ; ZURÃœCK
+       BRA     IRQ4                    ; ZURÜCK
 
 NO_MORE_STUFF:
 
        ADD.L   #25,SCORE               ; GEWINNER + 25
        BSR     WRITE_SCORE             ; SCORE AUSGEBEN
        BSET    #2,PLAYER               ; GAME OVER
-       BRA     IRQ4                    ; ZURÃœCK
+       BRA     IRQ4                    ; ZURÜCK
 
 SET_ZEROC:
        MOVE.L  #0,SCORE2               ; SCORE = 0
-       BRA     RETURNC                 ; ZURÃœCK
+       BRA     RETURNC                 ; ZURÜCK
 
 DO_COMP_ZERO:
        BSR     ZEROPLAY                ; VORZEICHEN WECHSELN
-       BRA     RETURNC1                ; ZURÃœCK
+       BRA     RETURNC1                ; ZURÜCK
 
 ;----------------------------------------------------------
 
@@ -1318,7 +1373,7 @@ FELD_FREI:
        BRA     NEXT                    ; NEIN WEITERMACHEN
 
 NIMM_FELD:
-       MOVE.L  D0,D1                   ; WERT = GRÃ–ÃŸTER WERT
+       MOVE.L  D0,D1                   ; WERT = GRÖßTER WERT
        MOVE.L  D2,D3                   ; NEUER BLOCK_Y
        MOVE.L  A0,A2                   ; NEUER MAPPOINTER
        BRA     NEXT                    ; WEITERMACHEN
@@ -1330,7 +1385,7 @@ DO_COLORS:
        MOVE.W  (A0)+,D2                ;  } FARBEN EINLESEN
        MOVE.W  (A0),D3                 ; /
        BSR     SPRITE_COLOR            ; FARBEN SETZEN
-       RTS                             ; ZURÃœCK
+       RTS                             ; ZURÜCK
 
 ;----------------------------------------------------------
 
@@ -1342,7 +1397,7 @@ GELB1:
        BSR     DO_COLORS               ; NEU SETZEN
        ADDQ.W  #1,SP_GELB              ; FARBTON
        ADDQ.W  #1,SP_GELB+2            ; AUFHELLEN
-       BRA     IRQ_END                 ; ZURÃœCK
+       BRA     IRQ_END                 ; ZURÜCK
 
 ;----------------------------------------------------------
 
@@ -1354,24 +1409,24 @@ MINT1:
        BSR     DO_COLORS               ; NEU SETZEN
        ADDQ.W  #1,SP_MINT+4            ; FARBTON
        ADDQ.W  #1,SP_MINT+2            ; AUFHELLEN
-       BRA     IRQ_END                 ; ZURÃœCK
+       BRA     IRQ_END                 ; ZURÜCK
 
 ;----------------------------------------------------------
 
 RESET_GELB:
        MOVE.L  #0,SP_GELB              ; FARBE = SCHWARZ
-       BRA     GELB1                   ; ZURÃœCK
+       BRA     GELB1                   ; ZURÜCK
 
 RESET_MINT:
        MOVE.L  #0,SP_MINT+2            ; FARBE = SCHWARZ
-       BRA     MINT1                   ; ZURÃœCK
+       BRA     MINT1                   ; ZURÜCK
 
 ;----------------------------------------------------------
 
 CHANGE_PLAYER:
 
        BTST    #0,PLAYER               ; PLAYER 2
-       BNE     ADD_PLAY_1              ; JA P1 ERHÃ„LT BONUS
+       BNE     ADD_PLAY_1              ; JA P1 ERHÄLT BONUS
 
        ADD.L   #15,SCORE2              ; PLAYER 2 BONUS ADDIEREN
        BSR     WRITE_SCORE_2           ; NEUEN SCORE AUSGEBEN
@@ -1384,7 +1439,7 @@ ADD_PLAY_1:
 CHANGE_PLAY:
        BCHG    #0,PLAYER               ; PLAYER WECHSELN
        MOVE.W  TIMEBASE,TIME           ; UHR NEU STELLEN
-       BRA     IRQ_1                   ; ZURÃœCK
+       BRA     IRQ_1                   ; ZURÜCK
 
 ;----------------------------------------------------------
 
@@ -1400,7 +1455,7 @@ NEW_IRQ:
        BSR     SET_POINTER             ; SPRITE SETZEN
        BSR     WRITE_TIME              ; UHR AUSGEBEN
 
-       CMP.W   #0,TIME                 ; UHR ABGELAUFEN ?
+       CMP.W   #0,TIME                 ; UHR ABGELAUFEN?
        BEQ     CHANGE_PLAYER           ; JA PLAYER WECHSELT
 
 IRQ_1:
@@ -1427,12 +1482,14 @@ IRQ_END:
        SUBQ.W  #1,TIME                 ; UHR - 1
 
 IRQ_END2:
-       MOVEM.L (A7)+,D0-D7/A0-A6       ; ALLE REGS ZURÃœCK
+       MOVEM.L (A7)+,D0-D7/A0-A6       ; ALLE REGS ZURÜCK
        DC.W    $4EF9                   ; IRQ ENDE
 OLDIRQ:
        DC.L    0
 
 ; ---------------------   DATEN BEREICH  ------------------
+
+ ALIGN.L
 
 SCREENDEVS:
        DC.W    0,0,640,256,3
@@ -1443,7 +1500,7 @@ SCREENDEVS:
 WINDOWDEVS:
        DC.W    100,50,400,200
        DC.B    1,0
-       DC.L    $60,$11800
+       DC.L    $60,$11810
 GADGET:    DC.L    GADGET_1,0,0
 SCREENHD:  DC.L    0,0
        DC.W    500,200,640,256,15
@@ -1464,7 +1521,7 @@ GADGET_2:
 
 GADGET_3:
        DC.L    GADGET_4
-       DC.W    168,170,64,10,0,$A02,4
+       DC.W    168,170,64,10,0,$4a02,4  
        DC.L    0,0,0,0,STR_INFO
        DC.W    3
        DC.L    0
@@ -1473,7 +1530,7 @@ STR_INFO:
        DC.L    STR_PUFFER,0
        DC.W    0,5,0,0,0,0,0,0
        DC.L    0
-STRDA: DC.L    400,0
+STRDA: DC.L    500,0
 
 GADGET_4:
        DC.L    GADGET_5
@@ -1578,32 +1635,33 @@ BRAIN_IM:
        DC.L    0
 
 SPIELFELD:
-       DS.B    160,0
+       DS.B    BOARD_H * BOARD_W,0,0,0,0
 
 ; -------------------      TEXTE        -------------------------
-
+ ALIGN
+ 
 SCORE_ASCII:   DS.B    6,0
 TIME_ASCII:    DS.B    6,0
-STR_PUFFER:    DC.B    "0400",0,0
+STR_PUFFER:    DC.B    "0500",0,0
 INTNAME:       DC.B    "intuition.library",0
 GFXNAME:       DC.B    "graphics.library",0
 TEXT1:         DC.B    "BRAIN BRAISER"     ; 13 CHARS
-TEXT2:         DC.B    "der GEHIRN rÃ¶ster" ; 17
-TEXT3:         DC.B    "Geschrieben von :" ; 17
-TEXT4:         DC.B    "Lutz GroÃŸhennig"   ; 15
+TEXT2:         DC.B    "the brain melter " ; 17
+TEXT3:         DC.B    "Written by:      " ; 17
+TEXT4:         DC.B    "Lutz Grosshennig"  ; 15
 SCR_NAME:      DC.B "                          BRAIN BRAISER SETUP MENUE",0
 SETTEXT1:      DC.B    "PLAYER 1"          ; 8
 SETTEXT2:      DC.B    "PLAYER 2"          ; 8
 SETTEXT3:      DC.B    "AMIGA"             ; 5
-SETTEXT4:      DC.B    "GEGEN"             ; 5
-SETTEXT5:      DC.B    "BITTE STELLEN SIE DIE UHR :" ; 27
-GAMETEXT1:     DC.B    "PUNKTE PLAYER 1 :" ; 17
-GAMETEXT2:     DC.B    "PUNKTE PLAYER 2 :" ; 17
-GAMETEXT3:     DC.B    "GEWINNER :"        ; 11
-GAMETEXT4:     DC.B    "UNENDSCHIEDEN"     ; 14
-GAMETEXT5:     DC.B    "BEENDEN"           ; 7
-GAMETEXT6:     DC.B    "NOCHMAL"           ; 7
-GAMETEXT7:     DC.B    "SPIELEN"           ; 7
+SETTEXT4:      DC.B    " VS. "             ; 5
+SETTEXT5:      DC.B    "PLEASE SET THE CLOCK :       " ; 27
+GAMETEXT1:     DC.B    "POINTS PLAYER 1 :" ; 17
+GAMETEXT2:     DC.B    "POINTS PLAYER 2 :" ; 17
+GAMETEXT3:     DC.B    "WINNER :  "        ; 11
+GAMETEXT4:     DC.B    "    DRAW     "     ; 14
+GAMETEXT5:     DC.B    " QUIT  "           ; 7
+GAMETEXT6:     DC.B    "  NEW  "           ; 7
+GAMETEXT7:     DC.B    "  GAME "           ; 7
 GAMETEXT8:     DC.B    "GAME OVER"         ; 9
 KEYTEXT:       DC.B    "KEYBOARD"          ; 8
 JOYTEXT:       DC.B    "JOYSTICKS"         ; 9
@@ -1611,9 +1669,6 @@ JOY1TEXT:      DC.B    "1"
 JOY2TEXT:      DC.B    "2"
 
 ; -------------  BILD DATEN ---------------------------------
-
-  ALIGN.L
-
 ; The DATA segment needs to go into the chipram!
   DATA
 
@@ -1664,4 +1719,4 @@ COUNT_DATA:    IBYTES  "DATA/-9.BIT"    ; 0
 SCORES:        IBYTES  "DATA/SCORES.BIT"
 SOUND_DATA:    IBYTES  "DATA/KLICK.SND"
 
-END
+ END
